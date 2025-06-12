@@ -1,6 +1,6 @@
 // Function to fetch the current timer data from the server
 function fetchCurrentTimer() {
-    fetch('/api/current/')
+    fetch('/api/timer/')
         .then(response => response.json())
         .then(data => {
             if (data.remaining_seconds !== undefined) {
