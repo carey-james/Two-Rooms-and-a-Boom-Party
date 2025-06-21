@@ -4,3 +4,4 @@ The code for two Matrix Portals, designed to be run on M4's and placed in each r
 
 Font used: [IBM Plex Mono](https://www.ibm.com/plex/), adjusted for Matrix Display by [Trevor Beaton for Adafruit](https://learn.adafruit.com/matrix-portal-m4-boxing-interval-timer/custom-font)
 
+Bell sound used: [Adafruit Sound Samples](https://github.com/adafruit/Adafruit-Sound-Samples/tree/master)
