@@ -12,12 +12,12 @@ from adafruit_bitmap_font import bitmap_font
 from adafruit_display_text.label import Label
 from adafruit_matrixportal.matrix import Matrix
 from adafruit_matrixportal.network import Network
-# - Secrets and Config Imports -
-from config import config
 
-####
-tz = os.getenv("TIMEZONE")
-print("TIMEZONE from settings.toml:", tz, type(tz))
+# --- Env Variables Imports ---
+timer_server = os.getenv('TIMER_SERVER')
+colon_blink = os.getenv('COLON_BLINK') == 'true'
+beep_audio = os.getenv('BEEP_AUDIO') == 'true'
+beep_file = os.getenv('BEEP_FILE')
 
 # --- Display Setup ---
 matrix = Matrix()
@@ -52,8 +52,7 @@ clock_label.y = display.height // 2
 # Use A0 for audio output (PWM)
 audio = audioio.AudioOut(board.A0)
 # Open the WAV file
-beep_file = open(f'{config['beep_audio']}', 'rb')
-beep = audiocore.WaveFile(beep_file)
+beep = audiocore.WaveFile(open(f'{beep_file}', 'rb'))
 
 # --- Wifi Setup ---
 network = Network(status_neopixel=board.NEOPIXEL, debug=True)
@@ -64,7 +63,7 @@ test_time = time.time() + 300
 ########################
 
 # --- Speaker Beep Method ---
-def speaker_beep(frequency=440, duration=0.1):
+def speaker_beep():
 	audio.play(beep)
 
 # --- Timer Update Method ---
@@ -76,9 +75,13 @@ def update_timer(remaining_time):
 	secs = remaining_time % 60
 	mins = remaining_time // 60
 
-	# Colon Blink
-	if (config['colon_blink']) and (int(f'{time.monotonic():.1f}'[-1]) > 4):
+	# Colon Blink and Beep
+	millisec = int(f'{time.monotonic():.1f}'[-1])
+	if colon_blink and (millisec > 4):
 		colon = ' '
+	if beep_audio and (millisec == 0):
+		speaker_beep()
+
 
 	# Update Clock
 	text = f'{mins:02d}{colon}{secs:02d}'
@@ -89,7 +92,7 @@ def update_timer(remaining_time):
 def get_remaining_time():
 	remaining_time = 0
 	try:
-		time_response = network.fetch_data(f'{config['timer_server']}', json_path=([]))
+		time_response = network.fetch_data(f'{timer_server}', json_path=([]))
 		remaining_time = time_response['remaining_seconds']
 	except RuntimeError as e:
 		print(f'A runtime error occured with the time fetch. {e}')
