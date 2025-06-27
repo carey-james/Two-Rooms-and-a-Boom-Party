@@ -1,33 +1,58 @@
-/* Basic styling for the timer page */
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 20px;
-    background-color: #f4f4f9;
-    text-align: center;
+  background: #1a1a1a url("{% static 'images/blueprint-bg.png' %}") center/cover;
+  color: #eee;
+  font-family: 'Courier New', Courier, monospace;
+  text-align: center;
 }
-
 h1 {
-    font-size: 2rem;
-    margin-bottom: 20px;
+  font-size: 2.5rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 30px;
 }
-
 form button {
-    font-size: 1.1rem;
-    padding: 10px 20px;
-    margin: 5px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    cursor: pointer;
+  background: #800000;
+  border: 2px solid #c33;
+  color: #fff;
+  font-size: 1.2rem;
+  padding: 12px 24px;
+  margin: 8px;
+  font-family: 'Courier New', monospace;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px #c33;
+  text-transform: uppercase;
 }
-
 form button:hover {
-    background-color: #45a049;
+  background: #a00000;
+  box-shadow: 4px 4px 0px #c33;
+}
+#timer-display {
+  font-size: 3rem;
+  margin-top: 40px;
+  background: rgba(0,0,0,0.6);
+  padding: 20px;
+  border: 2px solid #c33;
+  display: inline-block;
 }
 
-#timer-display {
-    font-size: 2rem;
-    margin-top: 20px;
-    font-weight: bold;
+.end-btn {
+  background: #222;
+  border: 2px dashed #c33;
+  color: #c33;
+  font-family: 'Courier New', monospace;
+  text-transform: uppercase;
+}
+.end-btn:hover {
+  background: #333;
+}
+
+.schedule-btn {
+  background: #004466;
+  border: 2px solid #0088aa;
+  color: #aaffee;
+  text-transform: uppercase;
+  font-family: 'Courier New', monospace;
+}
+.schedule-btn:hover {
+  background: #005577;
 }

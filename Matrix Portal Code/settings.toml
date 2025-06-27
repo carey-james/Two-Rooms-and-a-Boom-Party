@@ -1,8 +1,13 @@
 # Reserved
 CIRCUITPY_WIFI_SSID = ""
 CIRCUITPY_WIFI_PASSWORD = ""
-# Custom
+# Adafruit
+ADAFRUIT_AIO_USERNAME = ""
+ADAFRUIT_AIO_KEY      = ""
+# Setup
 TIMER_SERVER = "http://raspberrypi.local:8000/api/timer/"
 COLON_BLINK = "true"
 BEEP_AUDIO = "true"
 BEEP_FILE = "/audio/blip.wav"
+# Room Specific
+ROOM_NAME = ""

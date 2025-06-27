@@ -18,6 +18,7 @@ timer_server = os.getenv('TIMER_SERVER')
 colon_blink = os.getenv('COLON_BLINK') == 'true'
 beep_audio = os.getenv('BEEP_AUDIO') == 'true'
 beep_file = os.getenv('BEEP_FILE')
+room_name = os.getenv('ROOM_NAME')
 
 # --- Display Setup ---
 matrix = Matrix()
@@ -30,7 +31,7 @@ bitmap = displayio.Bitmap(64, 32, 2) # Width, Height, Bit depth
 color = displayio.Palette(4)
 color[0] = 0x000000 # black
 color[1] = 0xFF0000 # red
-color[2] = 0xFF8C00 # orange
+color[2] = 0x00AAFF # blue
 color[3] = 0x3DEB34 # green
 # - TileGrid -
 tile_grid = displayio.TileGrid(bitmap, pixel_shader=color)
@@ -57,10 +58,6 @@ beep = audiocore.WaveFile(open(f'{beep_file}', 'rb'))
 # --- Wifi Setup ---
 network = Network(status_neopixel=board.NEOPIXEL, debug=True)
 #network.get_local_time()
-
-########################
-test_time = time.time() + 300
-########################
 
 # --- Speaker Beep Method ---
 def speaker_beep():
@@ -92,32 +89,40 @@ def update_timer(remaining_time):
 def get_remaining_time():
 	remaining_time = 0
 	try:
+		# Fetch data from the timer server
 		time_response = network.fetch_data(f'{timer_server}', json_path=([]))
+		# Extract the remaining time in seconds
 		remaining_time = time_response['remaining_seconds']
 	except RuntimeError as e:
-		print(f'A runtime error occured with the time fetch. {e}')
-		pass
-	except:
-		print('An unknown error occured with the time fetch.')
-		pass
+		print(f'A runtime error occurred with the time fetch. {e}')
+	except Exception as e:
+		print(f'An unknown error occurred with the time fetch: {e}')
 	return remaining_time
 
-#############################
-# --- Test Remaining Time ---
-def test_remaining_time():
-	now = time.time()
-	if (now < test_time):
-		return (test_time - now)
+# --- Room Name Method ---
+def get_room_name():
+	if room_name == 'WEST':
+		clock_label.color = color[2]
 	else:
-		return 0
-#############################
+		clock_label.color = color[1]
+	text = f'{room_name}'
+	clock_label.text = text
+	return text
 
 # --- Main Method ---
 def main():
+	# Loading...
+	clock_label.color = color[3]
+	clock_label.text = 'Setup'
+	network.get_local_time()
+	print(time.monotonic())
+
 	while True:
-		text = update_timer(test_remaining_time())
-		print(f'{text}')
-		time.sleep(0.1)
+		remaining_time = get_remaining_time()
+        if remaining_time > 0:
+            update_timer(remaining_time)
+        else:
+            display_text("00:00")
 
 if __name__ == '__main__':
 	main()

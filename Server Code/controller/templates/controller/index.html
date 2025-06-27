@@ -15,16 +15,20 @@
     <h1>Select Timer Duration</h1>
     <form method="post">
         {% csrf_token %}
-        <button type="submit" name="duration" value="60">1 Minute</button>
-        <button type="submit" name="duration" value="120">2 Minutes</button>
-        <button type="submit" name="duration" value="180">3 Minutes</button>
-        <button type="submit" name="duration" value="240">4 Minutes</button>
-        <button type="submit" name="duration" value="300">5 Minutes</button>
+        <button type="submit" name="duration" value="300">Start 5 Min Round</button>
+        <button type="submit" name="duration" value="240">Start 4 Min Round</button>
+        <button type="submit" name="duration" value="180">Start 3 Min Round</button>
+        <button type="submit" name="duration" value="120">Start 2 Min Round</button>
+        <button type="submit" name="duration" value="60">Start 1 Min Round</button>
+        <button type="submit" name="action" value="end" class="end-btn">End Round</button>
+        <button type="submit" name="action" value="schedule_end" class="schedule-btn">
+            Timer Till 9:45 PM
+        </button>
     </form>
 
     <div id="timer-display">
         <!-- Timer display will be updated here -->
-        <p>Loading timer...</p>
+        <p>Initializing.</p>
     </div>
 
     <!-- Link to the external JavaScript file -->
