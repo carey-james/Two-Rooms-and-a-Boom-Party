@@ -11,7 +11,7 @@ import time
 from adafruit_bitmap_font import bitmap_font
 from adafruit_display_text.label import Label
 from adafruit_matrixportal.matrix import Matrix
-from adafruit_matrixportal.network import Network
+from adafruit_matrixportal.matrixportal import MatrixPortal
 
 # --- Env Variables Imports ---
 timer_server = os.getenv('TIMER_SERVER')
@@ -21,8 +21,8 @@ beep_file = os.getenv('BEEP_FILE')
 room_name = os.getenv('ROOM_NAME')
 
 # --- Display Setup ---
-matrix = Matrix()
-display = matrix.display
+matrixportal = MatrixPortal(status_neopixel=board.NEOPIXEL, debug=True)
+display = matrixportal.display
 
 # --- Graphics Setup ---
 group = displayio.Group()
@@ -55,74 +55,75 @@ audio = audioio.AudioOut(board.A0)
 # Open the WAV file
 beep = audiocore.WaveFile(open(f'{beep_file}', 'rb'))
 
-# --- Wifi Setup ---
-network = Network(status_neopixel=board.NEOPIXEL, debug=True)
-#network.get_local_time()
-
 # --- Speaker Beep Method ---
 def speaker_beep():
 	audio.play(beep)
 
 # --- Timer Update Method ---
 def update_timer(remaining_time):
-	now = time.localtime()
 	colon = ':'
 
 	# Convert remaining time to secs and mins
 	secs = remaining_time % 60
 	mins = remaining_time // 60
 
-	# Colon Blink and Beep
+	# Colon Blink, Time Update, and Beep
 	millisec = int(f'{time.monotonic():.1f}'[-1])
 	if colon_blink and (millisec > 4):
 		colon = ' '
-	if beep_audio and (millisec == 0):
-		speaker_beep()
-
 
 	# Update Clock
-	text = f'{mins:02d}{colon}{secs:02d}'
-	clock_label.text = text
-	return text
+	clock_label.text = f'{mins:02d}{colon}{secs:02d}'
+	return remaining_time
 
 # --- Time Get Method ---
 def get_remaining_time():
 	remaining_time = 0
+	response = None
 	try:
-		# Fetch data from the timer server
-		time_response = network.fetch_data(f'{timer_server}', json_path=([]))
-		# Extract the remaining time in seconds
-		remaining_time = time_response['remaining_seconds']
-	except RuntimeError as e:
-		print(f'A runtime error occurred with the time fetch. {e}')
+		response = matrixportal.network.requests.get(timer_server)
+		data = response.json()
+		remaining_time = data.get('remaining_seconds', 0)
 	except Exception as e:
-		print(f'An unknown error occurred with the time fetch: {e}')
+		print(f"A runtime error occurred with the time fetch. {e}")
+	finally:
+		if response:
+			try:
+				response.close()  # Always free the socket
+			except Exception as close_err:
+				print("Error closing response:", close_err)
 	return remaining_time
-
-# --- Room Name Method ---
-def get_room_name():
-	if room_name == 'WEST':
-		clock_label.color = color[2]
-	else:
-		clock_label.color = color[1]
-	text = f'{room_name}'
-	clock_label.text = text
-	return text
 
 # --- Main Method ---
 def main():
 	# Loading...
-	clock_label.color = color[3]
-	clock_label.text = 'Setup'
-	network.get_local_time()
-	print(time.monotonic())
+	clock_label.color = color[2]
+	clock_label.text = f'{room_name}.'
+	matrixportal.get_local_time()
+	clock_label.color = color[1]
+
+	remaining_time = 0
+	last_fetch_time = 0
+	last_sec_time = 0
 
 	while True:
-		remaining_time = get_remaining_time()
-        if remaining_time > 0:
-            update_timer(remaining_time)
-        else:
-            display_text("00:00")
+		if ((remaining_time == 0) and ((time.monotonic() - last_fetch_time) > 1)) or ((time.monotonic() - last_fetch_time) > 59):
+			remaining_time = update_timer(get_remaining_time())
+			last_fetch_time = time.monotonic()
+			last_sec_time = time.monotonic()
+		elif remaining_time > 0:
+			if ((time.monotonic() - last_sec_time) > 1):
+				remaining_time = remaining_time - 1
+				last_sec_time = time.monotonic()
+				if (remaining_time < 30) and (remaining_time > 1):
+					speaker_beep()
+				elif (remaining_time == 1):
+					speaker_beep()
+					speaker_beep()
+					speaker_beep()
+			remaining_time = update_timer(remaining_time)
+		else:
+			clock_label.text = ("00:00")
 
 if __name__ == '__main__':
 	main()
