@@ -8,6 +8,7 @@ ADAFRUIT_AIO_KEY      = ""
 TIMER_SERVER = "http://raspberrypi.local:8000/api/timer/"
 COLON_BLINK = "true"
 BEEP_AUDIO = "true"
-BEEP_FILE = "/audio/blip.wav"
+BEEP_FILE = "/audio/beep.wav"
+BLIP_FILE = "/audio/blip.wav"
 # Room Specific
 ROOM_NAME = ""

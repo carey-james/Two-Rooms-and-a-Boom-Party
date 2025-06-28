@@ -5,6 +5,7 @@ import audioio
 import board
 import digitalio
 import displayio
+import gc
 import os
 import rtc
 import time
@@ -12,12 +13,14 @@ from adafruit_bitmap_font import bitmap_font
 from adafruit_display_text.label import Label
 from adafruit_matrixportal.matrix import Matrix
 from adafruit_matrixportal.matrixportal import MatrixPortal
+import adafruit_requests
 
 # --- Env Variables Imports ---
 timer_server = os.getenv('TIMER_SERVER')
 colon_blink = os.getenv('COLON_BLINK') == 'true'
 beep_audio = os.getenv('BEEP_AUDIO') == 'true'
 beep_file = os.getenv('BEEP_FILE')
+blip_file = os.getenv('BLIP_FILE')
 room_name = os.getenv('ROOM_NAME')
 
 # --- Display Setup ---
@@ -52,12 +55,16 @@ clock_label.y = display.height // 2
 # --- Speaker Setup ---
 # Use A0 for audio output (PWM)
 audio = audioio.AudioOut(board.A0)
-# Open the WAV file
+# Open the WAV files
 beep = audiocore.WaveFile(open(f'{beep_file}', 'rb'))
+blip = audiocore.WaveFile(open(f'{blip_file}', 'rb'))
 
 # --- Speaker Beep Method ---
 def speaker_beep():
 	audio.play(beep)
+# --- Speaker Beep Method ---
+def speaker_blip():
+	audio.play(blip)
 
 # --- Timer Update Method ---
 def update_timer(remaining_time):
@@ -78,21 +85,25 @@ def update_timer(remaining_time):
 
 # --- Time Get Method ---
 def get_remaining_time():
-	remaining_time = 0
-	response = None
-	try:
-		response = matrixportal.network.requests.get(timer_server)
-		data = response.json()
-		remaining_time = data.get('remaining_seconds', 0)
-	except Exception as e:
-		print(f"A runtime error occurred with the time fetch. {e}")
-	finally:
-		if response:
-			try:
-				response.close()  # Always free the socket
-			except Exception as close_err:
-				print("Error closing response:", close_err)
-	return remaining_time
+    remaining_time = 0
+    response = None
+
+    try:
+        # Use the existing, built-in requests session
+        response = matrixportal.network.requests.get(timer_server)
+        data = response.json()
+        remaining_time = data.get('remaining_seconds', 0)
+    except Exception as e:
+        print(f"A runtime error occurred with the time fetch. {e}")
+    finally:
+        if response:
+            try:
+                response.close()  # 🔑 Critical: close socket
+            except Exception as close_err:
+                print("Error closing response:", close_err)
+        gc.collect()  # 🔄 Free up memory and sockets
+
+    return remaining_time
 
 # --- Main Method ---
 def main():
@@ -116,10 +127,8 @@ def main():
 				remaining_time = remaining_time - 1
 				last_sec_time = time.monotonic()
 				if (remaining_time < 30) and (remaining_time > 1):
-					speaker_beep()
+					speaker_blip()
 				elif (remaining_time == 1):
-					speaker_beep()
-					speaker_beep()
 					speaker_beep()
 			remaining_time = update_timer(remaining_time)
 		else:
